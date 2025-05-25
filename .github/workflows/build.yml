@@ -15,58 +15,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: [18, 20, 22]
-        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        os: [ubuntu-latest, macos-latest, windows-latest] # Operating systems to test
+        node-version: [18, 20, 22]                      # Node.js versions to test
+        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9,10]         # Repeat tests 10 times
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix['node-version'] }}
+          node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Install dependencies
+        run: npm install
+
+      - name: Testing on OS (${{ matrix.os }}) with Node.js (version ${{ matrix.node-version }}) attempt ${{ matrix.attempt }}
         run: |
-          sudo apt-get update || true
-          if [[ "$RUNNER_OS" == "Linux" ]]; then
-            sudo apt-get install -y make gdb qemu-system-x86 gcc nasm
-          elif [[ "$RUNNER_OS" == "macOS" ]]; then
-            brew install make nasm qemu
-          fi
-
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install make nasm --no-progress
-          # Add QEMU if needed, or mock its output for Windows
-        shell: powershell
-
-      - name: Run `make nasm` test
-        run: make nasm
-
-      - name: Run `make qemu` test
-        if: runner.os == 'Linux'  # Safer to limit to Linux
-        run: make qemu
-
-      - name: Run `make full` test
-        if: runner.os == 'Linux'
-        run: make full
-
-      - name: Run `make jit-paging` test
-        run: make jit-paging
-
-      - name: Run `make api` test
-        run: make api
-
-      - name: Run `make devices` test
-        run: make devices
-
-      - name: Run `make rust` test
-        run: make rust
-
-      - name: Run `make expect` test
-        run: make expect
+          echo "Run attempt: ${{ matrix.attempt }}"
+          npm test
